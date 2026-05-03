@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Análisis de Rutas Aéreas - Avianca</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: linear-gradient(135deg, #1e40af 0%, #dc2626 100%);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .header h1 {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            opacity: 0.95;
+        }
+
+        /* Menu Grid */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .menu-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .menu-card:hover {
+            transform: translateY(-5px);
+            border-color: #3b82f6;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+            background: rgba(30, 41, 59, 0.95);
+        }
+
+        .menu-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #60a5fa;
+        }
+
+        .menu-card p {
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            line-height: 1.5;
+        }
+
+        .menu-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        /* Content Area */
+        .content-area {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            display: none;
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .content-area.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .content-header h2 {
+            font-size: clamp(1.3rem, 3vw, 1.8rem);
+            color: #60a5fa;
+        }
+
+        .btn-back {
+            padding: 0.6rem 1.5rem;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .btn-back:hover {
+            background: #ef4444;
+            color: white;
+            transform: translateX(-5px);
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #cbd5e1;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .btn-primary {
+            padding: 0.8rem 2rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border: none;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        /* Results */
+        .result-box {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .result-box pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #cbd5e1;
+        }
+
+        .result-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #60a5fa;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid rgba(96, 165, 250, 0.3);
+            padding-bottom: 0.5rem;
+        }
+
+        /* Cities Grid */
+        .cities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .city-badge {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            padding: 0.6rem;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .city-badge:hover {
+            background: rgba(59, 130, 246, 0.4);
+            transform: scale(1.05);
+        }
+
+        /* Matrix Table */
+        .matrix-container {
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+
+        .matrix-table {
+            border-collapse: collapse;
+            font-size: 0.75rem;
+            background: rgba(15, 23, 42, 0.6);
+        }
+
+        .matrix-table th,
+        .matrix-table td {
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 0.4rem;
+            text-align: center;
+            min-width: 30px;
+        }
+
+        .matrix-table th {
+            background: rgba(59, 130, 246, 0.2);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .matrix-table tr th:first-child {
+            position: sticky;
+            left: 0;
+            background: rgba(59, 130, 246, 0.3);
+            z-index: 11;
+        }
+
+        .matrix-table td.connected {
+            background: rgba(34, 197, 94, 0.3);
+            color: #86efac;
+            font-weight: 600;
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+        }
+
+        .alert.success {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: #22c55e;
+            color: #86efac;
+        }
+
+        .alert.error {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+            color: #fca5a5;
+        }
+
+        .alert.info {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+            color: #93c5fd;
+        }
+
+        /* Route Path Visualization */
+        .route-path {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 8px;
+        }
+
+        .route-city {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            padding: 0.6rem 1.2rem;
+            border-radius: 20px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .route-arrow {
+            font-size: 1.5rem;
+            color: #60a5fa;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .content-area {
+                padding: 1rem;
+            }
+
+            .matrix-table {
+                font-size: 0.65rem;
+            }
+
+            .matrix-table th,
+            .matrix-table td {
+                padding: 0.3rem;
+                min-width: 25px;
+            }
+        }
+
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(59, 130, 246, 0.3);
+            border-radius: 50%;
+            border-top-color: #3b82f6;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(59, 130, 246, 0.5);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(59, 130, 246, 0.7);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>✈️ SISTEMA DE ANÁLISIS DE RUTAS AÉREAS - AVIANCA</h1>
+            <p>Trabajo 04: Análisis de rutas mediante relaciones y matrices de conectividad</p>
+        </div>
+
+        <!-- Menu Principal -->
+        <div id="menu-principal" class="menu-grid">
+            <div class="menu-card" onclick="mostrarSeccion('analizar-ruta')">
+                <span class="menu-icon">🔍</span>
+                <h3>1. Analizar ruta entre dos ciudades</h3>
+                <p>Busca la mejor ruta entre origen y destino, mostrando si existe vuelo directo o conexiones necesarias</p>
+            </div>
+
+            <div class="menu-card" onclick="mostrarSeccion('matriz-conectividad')">
+                <span class="menu-icon">📊</span>
+                <h3>2. Mostrar matriz de conectividad</h3>
+                <p>Visualiza la matriz completa de conexiones entre todas las ciudades de la red</p>
+            </div>
+
+            <div class="menu-card" onclick="mostrarSeccion('informe-completo')">
+                <span class="menu-icon">📋</span>
+                <h3>3. Generar informe completo</h3>
+                <p>Reporte detallado con estadísticas de la red, ciudades más conectadas y análisis general</p>
+            </div>
+
+            <div class="menu-card" onclick="mostrarSeccion('listar-ciudades')">
+                <span class="menu-icon">🌍</span>
+                <h3>4. Listar todas las ciudades</h3>
+                <p>Muestra todas las ciudades disponibles en la red organizadas por región</p>
+            </div>
+
+            <div class="menu-card" onclick="mostrarSeccion('ejemplos-predefinidos')">
+                <span class="menu-icon">⚡</span>
+                <h3>5. Ejecutar ejemplos predefinidos</h3>
+                <p>Ejecuta análisis de rutas con ejemplos ya configurados para demostración</p>
+            </div>
+
+            <div class="menu-card" onclick="mostrarSeccion('exportar-csv')">
+                <span class="menu-icon">💾</span>
+                <h3>6. Exportar matriz CSV</h3>
+                <p>Descarga la matriz de conectividad completa en formato CSV para análisis externo</p>
+            </div>
+
+            <div class="menu-card" onclick="mostrarSeccion('agregar-ciudad')">
+                <span class="menu-icon">➕</span>
+                <h3>7. Agregar nueva ciudad</h3>
+                <p>Agrega una nueva ciudad a la red con sus respectivas conexiones</p>
+            </div>
+        </div>
+
+        <!-- Sección 1: Analizar Ruta -->
+        <div id="analizar-ruta" class="content-area">
+            <div class="content-header">
+                <h2>Analizar ruta entre dos ciudades</h2>
+                <button class="btn-back" onclick="volverMenu()">← Volver al menú</button>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="origen">Ciudad de origen:</label>
+                    <input type="text" id="origen" placeholder="Ej: Lima" list="ciudades-list">
+                </div>
+                <div class="form-group">
+                    <label for="destino">Ciudad de destino:</label>
+                    <input type="text" id="destino" placeholder="Ej: Madrid" list="ciudades-list">
+                </div>
+            </div>
+            <button class="btn-primary" onclick="analizarRuta()">Analizar Ruta</button>
+            <div id="resultado-ruta"></div>
+        </div>
+
+        <!-- Sección 2: Matriz de Conectividad -->
+        <div id="matriz-conectividad" class="content-area">
+            <div class="content-header">
+                <h2>Matriz de conectividad</h2>
+                <button class="btn-back" onclick="volverMenu()">← Volver al menú</button>
+            </div>
+            <div class="result-box">
+                <div id="matriz-resultado"></div>
+            </div>
+        </div>
+
+        <!-- Sección 3: Informe Completo -->
+        <div id="informe-completo" class="content-area">
+            <div class="content-header">
+                <h2>Informe completo de la red</h2>
+                <button class="btn-back" onclick="volverMenu()">← Volver al menú</button>
+            </div>
+            <div class="result-box">
+                <div id="informe-resultado"></div>
+            </div>
+        </div>
+
+        <!-- Sección 4: Listar Ciudades -->
+        <div id="listar-ciudades" class="content-area">
+            <div class="content-header">
+                <h2>Lista de ciudades en la red</h2>
+                <button class="btn-back" onclick="volverMenu()">← Volver al menú</button>
+            </div>
+            <div class="result-box">
+                <div id="ciudades-resultado"></div>
+            </div>
+        </div>
+
+        <!-- Sección 5: Ejemplos Predefinidos -->
+        <div id="ejemplos-predefinidos" class="content-area">
+            <div class="content-header">
+                <h2>Ejemplos predefinidos</h2>
+                <button class="btn-back" onclick="volverMenu()">← Volver al menú</button>
+            </div>
+            <div class="result-box">
+                <div id="ejemplos-resultado"></div>
+            </div>
+        </div>
+
+        <!-- Sección 6: Exportar CSV -->
+        <div id="exportar-csv" class="content-area">
+            <div class="content-header">
+                <h2>Exportar matriz CSV</h2>
+                <button class="btn-back" onclick="volverMenu()">← Volver al menú</button>
+            </div>
+            <button class="btn-primary" onclick="exportarCSV()">Descargar matriz CSV</button>
+            <div class="result-box" style="margin-top: 1rem;">
+                <div class="result-title">Vista previa de la matriz CSV:</div>
+                <pre id="csv-preview"></pre>
+            </div>
+        </div>
+
+        <!-- Sección 7: Agregar Ciudad -->
+        <div id="agregar-ciudad" class="content-area">
+            <div class="content-header">
+                <h2>Agregar nueva ciudad a la red</h2>
+                <button class="btn-back" onclick="volverMenu()">← Volver al menú</button>
+            </div>
+            <div class="form-group">
+                <label for="nueva-ciudad">Nombre de la nueva ciudad:</label>
+                <input type="text" id="nueva-ciudad" placeholder="Ej: Buenos Aires">
+            </div>
+            <div id="conexiones-container">
+                <div class="form-group">
+                    <label for="conectar-con-1">Conectar con ciudad existente:</label>
+                    <input type="text" id="conectar-con-1" placeholder="Ej: Lima" list="ciudades-list">
+                </div>
+            </div>
+            <button class="btn-primary" onclick="agregarConexion()">+ Agregar otra conexión</button>
+            <button class="btn-primary" onclick="agregarCiudad()" style="margin-top: 0.5rem; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);">Agregar ciudad a la red</button>
+            <div id="agregar-resultado"></div>
+        </div>
+
+        <datalist id="ciudades-list"></datalist>
+    </div>
+
+    <script>
+        // ==========================================
+        // CÓDIGO ORIGINAL - SIN MODIFICACIONES
+        // ==========================================
+        class RedRutasAereas {
+            constructor() {
+                this.ciudades = [];
+                this.matrizConectividad = [];
+                this.indiceCiudad = {};
+
+                // Ciudades de Peru
+                this.ciudades.push("Lima");
+                this.ciudades.push("Iquitos");
+                this.ciudades.push("Piura");
+                this.ciudades.push("Chiclayo");
+                this.ciudades.push("Trujillo");
+                this.ciudades.push("Cusco");
+                this.ciudades.push("Puerto Maldonado");
+                this.ciudades.push("Juliaca");
+                this.ciudades.push("Arequipa");
+
+                // Ciudades de Centroamerica y Caribe
+                this.ciudades.push("Ciudad de Mexico");
+                this.ciudades.push("Cancun");
+                this.ciudades.push("La Habana");
+                this.ciudades.push("Belice");
+                this.ciudades.push("Roatan");
+                this.ciudades.push("San Pedro de Sula");
+                this.ciudades.push("La Ceiba");
+                this.ciudades.push("Flores");
+                this.ciudades.push("Ciudad de Guatemala");
+                this.ciudades.push("San Salvador");
+                this.ciudades.push("Tegucigalpa");
+                this.ciudades.push("Managua");
+                this.ciudades.push("Liberia");
+                this.ciudades.push("San Jose de Costa Rica");
+                this.ciudades.push("Ciudad de Panama");
+                this.ciudades.push("Punta Cana");
+                this.ciudades.push("Santo Domingo");
+                this.ciudades.push("San Juan");
+                this.ciudades.push("Caracas");
+
+                // Ciudades de Colombia
+                this.ciudades.push("Bogota");
+                this.ciudades.push("Medellin");
+                this.ciudades.push("Cali");
+                this.ciudades.push("Cartagena");
+                this.ciudades.push("Barranquilla");
+                this.ciudades.push("Santa Marta");
+                this.ciudades.push("Riohacha");
+                this.ciudades.push("Valledupar");
+                this.ciudades.push("Cucuta");
+                this.ciudades.push("Bucaramanga");
+                this.ciudades.push("Barrancabermeja");
+                this.ciudades.push("Yopal");
+                this.ciudades.push("Ibague");
+                this.ciudades.push("Armenia");
+                this.ciudades.push("Pereira");
+                this.ciudades.push("Manizales");
+                this.ciudades.push("Neiva");
+                this.ciudades.push("Florencia");
+                this.ciudades.push("Popayan");
+                this.ciudades.push("Pasto");
+                this.ciudades.push("Tumaco");
+                this.ciudades.push("San Andres");
+                this.ciudades.push("Monteria");
+                this.ciudades.push("Villavicencio");
+                this.ciudades.push("Leticia");
+
+                // Ciudades de Ecuador
+                this.ciudades.push("Quito");
+                this.ciudades.push("Guayaquil");
+
+                // Ciudades internacionales (Europa)
+                this.ciudades.push("Madrid");
+                this.ciudades.push("Barcelona");
+                this.ciudades.push("Londres");
+
+                let n = this.ciudades.length;
+
+                for (let i = 0; i < n; i++) {
+                    this.indiceCiudad[this.ciudades[i]] = i;
+                }
+
+                this.matrizConectividad = Array(n).fill(0).map(() => Array(n).fill(0));
+
+                this.inicializarRutas();
+            }
+
+            obtenerIndice(ciudad) {
+                if (this.indiceCiudad[ciudad] !== undefined) {
+                    return this.indiceCiudad[ciudad];
+                }
+                return -1;
+            }
+
+            registrarRuta(origen, destino) {
+                let i = this.obtenerIndice(origen);
+                let j = this.obtenerIndice(destino);
+
+                if (i != -1 && j != -1) {
+                    this.matrizConectividad[i][j] = 1;
+                    this.matrizConectividad[j][i] = 1;
+                }
+            }
+
+            inicializarRutas() {
+                // RUTAS DE PERU (Mapa 1)
+                this.registrarRuta("Lima", "Iquitos");
+                this.registrarRuta("Lima", "Piura");
+                this.registrarRuta("Lima", "Chiclayo");
+                this.registrarRuta("Lima", "Trujillo");
+                this.registrarRuta("Lima", "Cusco");
+                this.registrarRuta("Lima", "Puerto Maldonado");
+                this.registrarRuta("Lima", "Juliaca");
+                this.registrarRuta("Lima", "Arequipa");
+                this.registrarRuta("Cusco", "Puerto Maldonado");
+                this.registrarRuta("Cusco", "Arequipa");
+
+                // RUTAS CENTROAMERICA Y CARIBE (Mapa 2)
+                this.registrarRuta("Ciudad de Mexico", "San Jose de Costa Rica");
+                this.registrarRuta("Ciudad de Mexico", "San Salvador");
+                this.registrarRuta("Ciudad de Mexico", "Bogota");
+                this.registrarRuta("Ciudad de Mexico", "Lima");
+
+                this.registrarRuta("San Salvador", "Ciudad de Guatemala");
+                this.registrarRuta("San Salvador", "Ciudad de Mexico");
+                this.registrarRuta("San Salvador", "Belice");
+                this.registrarRuta("San Salvador", "San Pedro de Sula");
+                this.registrarRuta("San Salvador", "Managua");
+                this.registrarRuta("San Salvador", "San Jose de Costa Rica");
+                this.registrarRuta("San Salvador", "Roatan");
+                this.registrarRuta("San Salvador", "Ciudad de Panama");
+                this.registrarRuta("San Salvador", "Cancun");
+                this.registrarRuta("San Salvador", "Lima");
+                this.registrarRuta("San Salvador", "Liberia");
+                this.registrarRuta("San Salvador", "Bogota");
+                this.registrarRuta("San Salvador", "Quito");
+                this.registrarRuta("San Salvador", "Guayaquil");
+                this.registrarRuta("San Salvador", "La Habana");
+
+                this.registrarRuta("Bogota", "San Salvador");
+                this.registrarRuta("Bogota", "Ciudad de Mexico");
+                this.registrarRuta("Bogota", "Ciudad de Guatemala");
+                this.registrarRuta("Bogota", "Ciudad de Panama");
+                this.registrarRuta("Bogota", "San Jose de Costa Rica");
+                this.registrarRuta("Bogota", "Cancun");
+                this.registrarRuta("Bogota", "Punta Cana");
+                this.registrarRuta("Bogota", "Santo Domingo");
+                this.registrarRuta("Bogota", "San Juan");
+
+                this.registrarRuta("Ciudad de Guatemala", "Flores");
+                this.registrarRuta("Ciudad de Guatemala", "Bogota");
+                this.registrarRuta("Ciudad de Guatemala", "San Jose de Costa Rica");
+                this.registrarRuta("Ciudad de Guatemala", "San Salvador");
+                this.registrarRuta("Ciudad de Guatemala", "Tegucigalpa");
+                this.registrarRuta("Ciudad de Guatemala", "San Pedro de Sula");
+
+                this.registrarRuta("Managua", "San Salvador");
+                this.registrarRuta("Managua", "San Jose de Costa Rica");
+
+                this.registrarRuta("Cancun", "Bogota");
+                this.registrarRuta("Cancun", "San Salvador");
+
+                this.registrarRuta("Ciudad de Panama", "San Jose de Costa Rica");
+                this.registrarRuta("Ciudad de Panama", "Bogota");
+                this.registrarRuta("Ciudad de Panama", "San Salvador");
+
+                this.registrarRuta("Punta Cana", "Bogota");
+
+                // RUTAS DE COLOMBIA (Mapa 3)
+                this.registrarRuta("Bogota", "Cartagena");
+                this.registrarRuta("Bogota", "Barranquilla");
+                this.registrarRuta("Bogota", "Santa Marta");
+                this.registrarRuta("Bogota", "Riohacha");
+                this.registrarRuta("Bogota", "Valledupar");
+                this.registrarRuta("Bogota", "Cucuta");
+                this.registrarRuta("Bogota", "Bucaramanga");
+                this.registrarRuta("Bogota", "Barrancabermeja");
+                this.registrarRuta("Bogota", "Yopal");
+                this.registrarRuta("Bogota", "Ibague");
+                this.registrarRuta("Bogota", "Armenia");
+                this.registrarRuta("Bogota", "Pereira");
+                this.registrarRuta("Bogota", "Manizales");
+                this.registrarRuta("Bogota", "Neiva");
+                this.registrarRuta("Bogota", "Florencia");
+                this.registrarRuta("Bogota", "Popayan");
+                this.registrarRuta("Bogota", "Pasto");
+                this.registrarRuta("Bogota", "Cali");
+                this.registrarRuta("Bogota", "San Andres");
+                this.registrarRuta("Bogota", "Monteria");
+                this.registrarRuta("Bogota", "Villavicencio");
+                this.registrarRuta("Bogota", "Leticia");
+
+                this.registrarRuta("Bogota", "Madrid");
+                this.registrarRuta("Bogota", "Barcelona");
+                this.registrarRuta("Bogota", "Londres");
+
+                this.registrarRuta("Cali", "San Andres");
+                this.registrarRuta("Cali", "Pasto");
+                this.registrarRuta("Cali", "Cartagena");
+                this.registrarRuta("Cali", "Barranquilla");
+                this.registrarRuta("Cali", "Madrid");
+                this.registrarRuta("Medellin", "Cartagena");
+                this.registrarRuta("Medellin", "Bogota");
+                this.registrarRuta("Medellin", "Cucuta");
+                this.registrarRuta("Medellin", "Madrid");
+                this.registrarRuta("Medellin", "Barranquilla");
+                this.registrarRuta("Medellin", "Santa Marta");
+
+                this.registrarRuta("Lima", "Santo Domingo");
+                this.registrarRuta("Lima", "Quito");
+                this.registrarRuta("Lima", "Guayaquil");
+                this.registrarRuta("Lima", "San Salvador");
+                this.registrarRuta("Lima", "Ciudad de Mexico");
+                this.registrarRuta("Lima", "San Jose de Costa Rica");
+            }
+
+            vueloDirecto(origen, destino) {
+                let i = this.obtenerIndice(origen);
+                let j = this.obtenerIndice(destino);
+
+                if (i != -1 && j != -1) {
+                    return this.matrizConectividad[i][j] == 1;
+                }
+                return false;
+            }
+
+            buscarRutaMinima(origen, destino) {
+                let inicioIdx = this.obtenerIndice(origen);
+                let finIdx = this.obtenerIndice(destino);
+
+                if (inicioIdx == -1 || finIdx == -1) {
+                    return null;
+                }
+
+                let n = this.ciudades.length;
+                let visitados = Array(n).fill(false);
+                let cola = [];
+                let padres = Array(n).fill(-1);
+
+                cola.push(inicioIdx);
+                visitados[inicioIdx] = true;
+
+                while (cola.length > 0) {
+                    let actual = cola.shift();
+
+                    if (actual == finIdx) {
+                        let camino = [];
+                        let idx = finIdx;
+                        while (idx != -1) {
+                            camino.unshift(this.ciudades[idx]);
+                            idx = padres[idx];
+                        }
+                        return camino;
+                    }
+
+                    for (let i = 0; i < n; i++) {
+                        if (this.matrizConectividad[actual][i] == 1 && !visitados[i]) {
+                            visitados[i] = true;
+                            padres[i] = actual;
+                            cola.push(i);
+                        }
+                    }
+                }
+
+                return null;
+            }
+
+            analizarRuta(origen, destino) {
+                let output = "";
+                output += "=".repeat(72) + "\n";
+                output += "  ANÁLISIS DE RUTA: " + origen + " → " + destino + "\n";
+                output += "=".repeat(72) + "\n\n";
+
+                let i = this.obtenerIndice(origen);
+                let j = this.obtenerIndice(destino);
+
+                if (i == -1) {
+                    output += "[X] Error: Ciudad de origen '" + origen + "' no encontrada.\n";
+                    return output;
+                }
+
+                if (j == -1) {
+                    output += "[X] Error: Ciudad de destino '" + destino + "' no encontrada.\n";
+                    return output;
+                }
+
+                if (origen == destino) {
+                    output += "[!] El origen y destino son la misma ciudad.\n";
+                    return output;
+                }
+
+                let esDirecto = this.vueloDirecto(origen, destino);
+
+                output += "  Vuelo directo disponible: " + (esDirecto ? "SÍ ✓" : "NO ✗") + "\n\n";
+
+                let ruta = this.buscarRutaMinima(origen, destino);
+
+                if (ruta == null) {
+                    output += "  [X] NO EXISTE RUTA entre estas dos ciudades.\n";
+                    output += "  Las ciudades no están conectadas en la red actual.\n\n";
+                } else {
+                    output += "  Ruta más corta encontrada:\n";
+                    output += "  " + ruta.join(" → ") + "\n\n";
+
+                    let numEscalas = ruta.length - 2;
+                    output += "  Número de escalas: " + numEscalas + "\n";
+
+                    if (numEscalas == 0) {
+                        output += "  Tipo de vuelo: DIRECTO\n";
+                    } else if (numEscalas == 1) {
+                        output += "  Tipo de vuelo: 1 ESCALA\n";
+                        output += "  Ciudad de conexión: " + ruta[1] + "\n";
+                    } else {
+                        output += "  Tipo de vuelo: " + numEscalas + " ESCALAS\n";
+                        output += "  Ciudades de conexión: ";
+                        for (let k = 1; k < ruta.length - 1; k++) {
+                            output += ruta[k];
+                            if (k < ruta.length - 2) output += ", ";
+                        }
+                        output += "\n";
+                    }
+                }
+
+                output += "\n" + "-".repeat(72) + "\n";
+                return output;
+            }
+
+            mostrarMatrizConectividad() {
+                let output = "";
+                output += "=".repeat(72) + "\n";
+                output += "  MATRIZ DE CONECTIVIDAD\n";
+                output += "=".repeat(72) + "\n\n";
+
+                let n = this.ciudades.length;
+
+                output += "Ciudades: " + n + "\n\n";
+
+                for (let i = 0; i < n; i++) {
+                    output += i.toString().padStart(2, ' ') + ". " + this.ciudades[i] + "\n";
+                }
+
+                output += "\n" + "-".repeat(72) + "\n";
+                return output;
+            }
+
+            generarInformeCompleto() {
+                let output = "";
+                output += "=".repeat(72) + "\n";
+                output += "  INFORME COMPLETO DE LA RED DE RUTAS AÉREAS\n";
+                output += "=".repeat(72) + "\n\n";
+
+                let n = this.ciudades.length;
+                output += "DATOS GENERALES:\n";
+                output += "-".repeat(72) + "\n";
+                output += "  Total de ciudades: " + n + "\n";
+
+                let totalRutas = 0;
+                for (let i = 0; i < n; i++) {
+                    for (let j = i + 1; j < n; j++) {
+                        if (this.matrizConectividad[i][j] == 1) {
+                            totalRutas++;
+                        }
+                    }
+                }
+
+                output += "  Total de rutas: " + totalRutas + "\n\n";
+
+                output += "ANÁLISIS DE CONECTIVIDAD:\n";
+                output += "-".repeat(72) + "\n";
+
+                let conexionesPorCiudad = [];
+                for (let i = 0; i < n; i++) {
+                    let count = 0;
+                    for (let j = 0; j < n; j++) {
+                        if (this.matrizConectividad[i][j] == 1) {
+                            count++;
+                        }
+                    }
+                    conexionesPorCiudad.push({ ciudad: this.ciudades[i], conexiones: count });
+                }
+
+                conexionesPorCiudad.sort((a, b) => b.conexiones - a.conexiones);
+
+                output += "  TOP 10 CIUDADES MÁS CONECTADAS:\n\n";
+                for (let i = 0; i < Math.min(10, conexionesPorCiudad.length); i++) {
+                    let ciudad = conexionesPorCiudad[i].ciudad;
+                    let conexiones = conexionesPorCiudad[i].conexiones;
+                    output += "  " + (i + 1) + ". " + ciudad.padEnd(25, ' ') + " -> " + conexiones + " conexiones\n";
+                }
+
+                output += "\n" + "-".repeat(72) + "\n";
+                return output;
+            }
+
+            listarCiudades() {
+                let output = "";
+                output += "=".repeat(72) + "\n";
+                output += "  LISTA DE CIUDADES EN LA RED\n";
+                output += "=".repeat(72) + "\n\n";
+
+                let total = this.ciudades.length;
+                let filas = 15;
+
+                let col1 = 0;
+                let col2 = col1 + filas;
+                let col3 = col2 + filas;
+                let col4 = col3 + filas;
+
+                for (let i = 0; i < filas; i++) {
+                    let line = "";
+                    
+                    if (col1 + i < total)
+                        line += (col1 + i).toString().padStart(2, ' ') + ". " + this.ciudades[col1 + i].padEnd(20, ' ');
+
+                    if (col2 + i < total)
+                        line += (col2 + i).toString().padStart(2, ' ') + ". " + this.ciudades[col2 + i].padEnd(25, ' ');
+
+                    if (col3 + i < total)
+                        line += (col3 + i).toString().padStart(2, ' ') + ". " + this.ciudades[col3 + i].padEnd(25, ' ');
+
+                    if (col4 + i < total)
+                        line += (col4 + i).toString().padStart(2, ' ') + ". " + this.ciudades[col4 + i];
+
+                    output += line + "\n";
+                }
+
+                output += "\n" + "-".repeat(72) + "\n";
+                return output;
+            }
+
+            agregarCiudad(nueva) {
+                if (this.indiceCiudad[nueva] !== undefined) {
+                    return false;
+                }
+
+                this.ciudades.push(nueva);
+                let nuevoIndice = this.ciudades.length - 1;
+                this.indiceCiudad[nueva] = nuevoIndice;
+
+                for (let i = 0; i < this.matrizConectividad.length; i++) {
+                    this.matrizConectividad[i].push(0);
+                }
+                this.matrizConectividad.push(Array(this.ciudades.length).fill(0));
+
+                return true;
+            }
+
+            generarMatrizCompletaCSV() {
+                let output = "";
+                output += "=".repeat(72) + "\n";
+                output += "  MATRIZ DE CONECTIVIDAD COMPLETA (formato CSV)\n";
+                output += "=".repeat(72) + "\n\n";
+
+                output += ",";
+                for (let j = 0; j < this.ciudades.length; j++) {
+                    output += this.ciudades[j];
+                    if (j < this.ciudades.length - 1) output += ",";
+                }
+                output += "\n";
+
+                for (let i = 0; i < this.ciudades.length; i++) {
+                    output += this.ciudades[i] + ",";
+                    for (let j = 0; j < this.ciudades.length; j++) {
+                        output += this.matrizConectividad[i][j];
+                        if (j < this.ciudades.length - 1) output += ",";
+                    }
+                    output += "\n";
+                }
+
+                output += "\n" + "-".repeat(72) + "\n";
+                return output;
+            }
+        }
+
+        // ==========================================
+        // INTERFAZ WEB - GESTIÓN DE UI
+        // ==========================================
+        let red = new RedRutasAereas();
+        let contadorConexiones = 1;
+
+        // Actualizar datalist con ciudades
+        function actualizarDatalist() {
+            const datalist = document.getElementById('ciudades-list');
+            datalist.innerHTML = '';
+            red.ciudades.forEach(ciudad => {
+                const option = document.createElement('option');
+                option.value = ciudad;
+                datalist.appendChild(option);
+            });
+        }
+
+        function mostrarSeccion(seccionId) {
+            document.getElementById('menu-principal').style.display = 'none';
+            document.querySelectorAll('.content-area').forEach(area => {
+                area.classList.remove('active');
+            });
+            document.getElementById(seccionId).classList.add('active');
+
+            // Ejecutar función específica según sección
+            if (seccionId === 'matriz-conectividad') {
+                mostrarMatrizUI();
+            } else if (seccionId === 'informe-completo') {
+                mostrarInformeUI();
+            } else if (seccionId === 'listar-ciudades') {
+                listarCiudadesUI();
+            } else if (seccionId === 'ejemplos-predefinidos') {
+                ejecutarEjemplosUI();
+            } else if (seccionId === 'exportar-csv') {
+                mostrarCSVPreview();
+            }
+        }
+
+        function volverMenu() {
+            document.querySelectorAll('.content-area').forEach(area => {
+                area.classList.remove('active');
+            });
+            document.getElementById('menu-principal').style.display = 'grid';
+        }
+
+        function analizarRuta() {
+            const origen = document.getElementById('origen').value.trim();
+            const destino = document.getElementById('destino').value.trim();
+            const resultado = document.getElementById('resultado-ruta');
+
+            if (!origen || !destino) {
+                resultado.innerHTML = '<div class="alert error">Por favor ingrese origen y destino</div>';
+                return;
+            }
+
+            const output = red.analizarRuta(origen, destino);
+            
+            // Formatear resultado con visualización de ruta
+            const ruta = red.buscarRutaMinima(origen, destino);
+            let html = '<div class="result-box"><pre>' + output + '</pre>';
+            
+            if (ruta && ruta.length > 0) {
+                html += '<div class="route-path">';
+                ruta.forEach((ciudad, idx) => {
+                    if (idx > 0) html += '<span class="route-arrow">→</span>';
+                    html += '<span class="route-city">' + ciudad + '</span>';
+                });
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            resultado.innerHTML = html;
+        }
+
+        function mostrarMatrizUI() {
+            const resultado = document.getElementById('matriz-resultado');
+            const output = red.mostrarMatrizConectividad();
+            
+            // Crear tabla visual de la matriz
+            let html = '<div class="result-title">Matriz de conectividad</div>';
+            html += '<div class="matrix-container"><table class="matrix-table">';
+            html += '<tr><th></th>';
+            
+            red.ciudades.forEach((ciudad, idx) => {
+                html += '<th>' + idx + '</th>';
+            });
+            html += '</tr>';
+            
+            red.ciudades.forEach((ciudadFila, i) => {
+                html += '<tr><th>' + i + '. ' + ciudadFila + '</th>';
+                red.ciudades.forEach((ciudadCol, j) => {
+                    const valor = red.matrizConectividad[i][j];
+                    const clase = valor === 1 ? 'connected' : '';
+                    html += '<td class="' + clase + '">' + valor + '</td>';
+                });
+                html += '</tr>';
+            });
+            
+            html += '</table></div>';
+            html += '<div class="result-box" style="margin-top: 1rem;"><pre>' + output + '</pre></div>';
+            
+            resultado.innerHTML = html;
+        }
+
+        function mostrarInformeUI() {
+            const resultado = document.getElementById('informe-resultado');
+            const output = red.generarInformeCompleto();
+            resultado.innerHTML = '<pre>' + output + '</pre>';
+        }
+
+        function listarCiudadesUI() {
+            const resultado = document.getElementById('ciudades-resultado');
+            const output = red.listarCiudades();
+            
+            let html = '<div class="result-title">Ciudades organizadas</div>';
+            html += '<div class="cities-grid">';
+            
+            red.ciudades.forEach((ciudad, idx) => {
+                html += '<div class="city-badge">' + idx + '. ' + ciudad + '</div>';
+            });
+            
+            html += '</div>';
+            html += '<div class="result-box" style="margin-top: 1.5rem;"><pre>' + output + '</pre></div>';
+            
+            resultado.innerHTML = html;
+        }
+
+        function ejecutarEjemplosUI() {
+            const resultado = document.getElementById('ejemplos-resultado');
+            let html = '<div class="result-title">Ejemplos predefinidos</div>';
+            
+            const ejemplos = [
+                ["Iquitos", "Madrid"],
+                ["Lima", "Londres"],
+                ["Cusco", "Barcelona"],
+                ["Piura", "San Andres"],
+                ["Arequipa", "Cancun"]
+            ];
+            
+            ejemplos.forEach(([origen, destino]) => {
+                const output = red.analizarRuta(origen, destino);
+                html += '<div class="result-box" style="margin-bottom: 1rem;"><pre>' + output + '</pre></div>';
+            });
+            
+            resultado.innerHTML = html;
+        }
+
+        function mostrarCSVPreview() {
+            const output = red.generarMatrizCompletaCSV();
+            document.getElementById('csv-preview').textContent = output;
+        }
+
+        function exportarCSV() {
+            const csv = red.generarMatrizCompletaCSV();
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'avianca_matriz_conectividad.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function agregarConexion() {
+            contadorConexiones++;
+            const container = document.getElementById('conexiones-container');
+            const nuevaConexion = document.createElement('div');
+            nuevaConexion.className = 'form-group';
+            nuevaConexion.innerHTML = `
+                <label for="conectar-con-${contadorConexiones}">Conectar con ciudad existente:</label>
+                <input type="text" id="conectar-con-${contadorConexiones}" placeholder="Ej: Bogotá" list="ciudades-list">
+            `;
+            container.appendChild(nuevaConexion);
+        }
+
+        function agregarCiudad() {
+            const nombreCiudad = document.getElementById('nueva-ciudad').value.trim();
+            const resultado = document.getElementById('agregar-resultado');
+
+            if (!nombreCiudad) {
+                resultado.innerHTML = '<div class="alert error">Por favor ingrese el nombre de la ciudad</div>';
+                return;
+            }
+
+            if (red.indiceCiudad[nombreCiudad] !== undefined) {
+                resultado.innerHTML = '<div class="alert error">La ciudad "' + nombreCiudad + '" ya existe en la red</div>';
+                return;
+            }
+
+            // Agregar ciudad
+            const agregado = red.agregarCiudad(nombreCiudad);
+            
+            if (!agregado) {
+                resultado.innerHTML = '<div class="alert error">Error al agregar la ciudad</div>';
+                return;
+            }
+
+            // Agregar conexiones
+            let conexionesAgregadas = 0;
+            let mensajeConexiones = "";
+            
+            for (let i = 1; i <= contadorConexiones; i++) {
+                const inputConexion = document.getElementById('conectar-con-' + i);
+                if (inputConexion && inputConexion.value.trim()) {
+                    const ciudadConexion = inputConexion.value.trim();
+                    if (red.indiceCiudad[ciudadConexion] !== undefined) {
+                        red.registrarRuta(nombreCiudad, ciudadConexion);
+                        conexionesAgregadas++;
+                        mensajeConexiones += " • " + ciudadConexion + "\n";
+                    }
+                }
+            }
+
+            // Si no hay conexiones, conectar con Lima automáticamente
+            if (conexionesAgregadas === 0) {
+                red.registrarRuta(nombreCiudad, "Lima");
+                mensajeConexiones = " • Lima (conexión automática)\n";
+                conexionesAgregadas = 1;
+            }
+
+            let html = '<div class="alert success">';
+            html += '✓ Ciudad "' + nombreCiudad + '" agregada exitosamente\n\n';
+            html += 'Conexiones establecidas (' + conexionesAgregadas + '):\n';
+            html += mensajeConexiones;
+            html += '</div>';
+
+            resultado.innerHTML = html;
+
+            // Actualizar datalist y limpiar formulario
+            actualizarDatalist();
+            document.getElementById('nueva-ciudad').value = '';
+            document.getElementById('conexiones-container').innerHTML = `
+                <div class="form-group">
+                    <label for="conectar-con-1">Conectar con ciudad existente:</label>
+                    <input type="text" id="conectar-con-1" placeholder="Ej: Lima" list="ciudades-list">
+                </div>
+            `;
+            contadorConexiones = 1;
+        }
+
+        // Inicialización
+        window.addEventListener('DOMContentLoaded', function() {
+            actualizarDatalist();
+        });
+    </script>
+</body>
+</html>

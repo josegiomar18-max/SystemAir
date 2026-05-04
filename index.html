@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -105,8 +106,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .content-header {
@@ -373,7 +381,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* Scrollbar */
@@ -407,8 +417,173 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* ── Botón flotante diagrama ── */
+        #btn-diagrama {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: rgba(30, 41, 59, 0.85);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            color: #60a5fa;
+            font-size: 1.1rem;
+            cursor: pointer;
+            z-index: 9999;
+            backdrop-filter: blur(8px);
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        #btn-diagrama:hover {
+            background: rgba(59, 130, 246, 0.3);
+            border-color: #3b82f6;
+            transform: scale(1.1);
+        }
+
+        /* ── Modal ── */
+        #modal-diagrama {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.82);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        #modal-diagrama.open {
+            display: flex;
+        }
+
+        #modal-inner {
+            background: #0f172a;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 14px;
+            width: 96vw;
+            height: 92vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: fadeIn 0.2s ease;
+        }
+
+        /* Barra superior del modal */
+        #modal-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.65rem 1rem;
+            background: rgba(30, 41, 59, 0.9);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+            flex-shrink: 0;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        #modal-toolbar span {
+            color: #60a5fa;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .toolbar-hint {
+            color: #64748b;
+            font-size: 0.75rem;
+        }
+
+        #modal-toolbar .toolbar-btns {
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .tbtn {
+            padding: 0.3rem 0.7rem;
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .tbtn:hover {
+            background: rgba(59, 130, 246, 0.35);
+            color: white;
+        }
+
+        #btn-cerrar-modal {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #fca5a5;
+            border-radius: 6px;
+            padding: 0.3rem 0.75rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        #btn-cerrar-modal:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* Área del canvas con zoom/pan */
+        #diagrama-viewport {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            cursor: grab;
+            background:
+                radial-gradient(circle, rgba(59, 130, 246, 0.03) 0%, transparent 70%),
+                repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(148, 163, 184, 0.05) 39px, rgba(148, 163, 184, 0.05) 40px),
+                repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(148, 163, 184, 0.05) 39px, rgba(148, 163, 184, 0.05) 40px);
+        }
+
+        #diagrama-viewport.grabbing {
+            cursor: grabbing;
+        }
+
+        #diagrama-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: 0 0;
+            will-change: transform;
+            padding: 2rem;
+        }
+
+        /* Estilos mermaid en alta calidad */
+        #diagrama-canvas .mermaid svg {
+            min-width: 900px;
+            font-size: 14px !important;
+        }
+
+        /* Indicador de zoom */
+        #zoom-indicator {
+            position: absolute;
+            bottom: 0.75rem;
+            right: 0.75rem;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: #94a3b8;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+            pointer-events: none;
+            backdrop-filter: blur(4px);
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- Header -->
@@ -422,7 +597,8 @@
             <div class="menu-card" onclick="mostrarSeccion('analizar-ruta')">
                 <span class="menu-icon">🔍</span>
                 <h3>1. Analizar ruta entre dos ciudades</h3>
-                <p>Busca la mejor ruta entre origen y destino, mostrando si existe vuelo directo o conexiones necesarias</p>
+                <p>Busca la mejor ruta entre origen y destino, mostrando si existe vuelo directo o conexiones necesarias
+                </p>
             </div>
 
             <div class="menu-card" onclick="mostrarSeccion('matriz-conectividad')">
@@ -556,7 +732,9 @@
                 </div>
             </div>
             <button class="btn-primary" onclick="agregarConexion()">+ Agregar otra conexión</button>
-            <button class="btn-primary" onclick="agregarCiudad()" style="margin-top: 0.5rem; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);">Agregar ciudad a la red</button>
+            <button class="btn-primary" onclick="agregarCiudad()"
+                style="margin-top: 0.5rem; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);">Agregar
+                ciudad a la red</button>
             <div id="agregar-resultado"></div>
         </div>
 
@@ -975,7 +1153,7 @@
 
                 for (let i = 0; i < filas; i++) {
                     let line = "";
-                    
+
                     if (col1 + i < total)
                         line += (col1 + i).toString().padStart(2, ' ') + ". " + this.ciudades[col1 + i].padEnd(20, ' ');
 
@@ -1095,11 +1273,11 @@
             }
 
             const output = red.analizarRuta(origen, destino);
-            
+
             // Formatear resultado con visualización de ruta
             const ruta = red.buscarRutaMinima(origen, destino);
             let html = '<div class="result-box"><pre>' + output + '</pre>';
-            
+
             if (ruta && ruta.length > 0) {
                 html += '<div class="route-path">';
                 ruta.forEach((ciudad, idx) => {
@@ -1108,7 +1286,7 @@
                 });
                 html += '</div>';
             }
-            
+
             html += '</div>';
             resultado.innerHTML = html;
         }
@@ -1116,17 +1294,17 @@
         function mostrarMatrizUI() {
             const resultado = document.getElementById('matriz-resultado');
             const output = red.mostrarMatrizConectividad();
-            
+
             // Crear tabla visual de la matriz
             let html = '<div class="result-title">Matriz de conectividad</div>';
             html += '<div class="matrix-container"><table class="matrix-table">';
             html += '<tr><th></th>';
-            
+
             red.ciudades.forEach((ciudad, idx) => {
                 html += '<th>' + idx + '</th>';
             });
             html += '</tr>';
-            
+
             red.ciudades.forEach((ciudadFila, i) => {
                 html += '<tr><th>' + i + '. ' + ciudadFila + '</th>';
                 red.ciudades.forEach((ciudadCol, j) => {
@@ -1136,10 +1314,10 @@
                 });
                 html += '</tr>';
             });
-            
+
             html += '</table></div>';
             html += '<div class="result-box" style="margin-top: 1rem;"><pre>' + output + '</pre></div>';
-            
+
             resultado.innerHTML = html;
         }
 
@@ -1152,24 +1330,24 @@
         function listarCiudadesUI() {
             const resultado = document.getElementById('ciudades-resultado');
             const output = red.listarCiudades();
-            
+
             let html = '<div class="result-title">Ciudades organizadas</div>';
             html += '<div class="cities-grid">';
-            
+
             red.ciudades.forEach((ciudad, idx) => {
                 html += '<div class="city-badge">' + idx + '. ' + ciudad + '</div>';
             });
-            
+
             html += '</div>';
             html += '<div class="result-box" style="margin-top: 1.5rem;"><pre>' + output + '</pre></div>';
-            
+
             resultado.innerHTML = html;
         }
 
         function ejecutarEjemplosUI() {
             const resultado = document.getElementById('ejemplos-resultado');
             let html = '<div class="result-title">Ejemplos predefinidos</div>';
-            
+
             const ejemplos = [
                 ["Iquitos", "Madrid"],
                 ["Lima", "Londres"],
@@ -1177,12 +1355,12 @@
                 ["Piura", "San Andres"],
                 ["Arequipa", "Cancun"]
             ];
-            
+
             ejemplos.forEach(([origen, destino]) => {
                 const output = red.analizarRuta(origen, destino);
                 html += '<div class="result-box" style="margin-bottom: 1rem;"><pre>' + output + '</pre></div>';
             });
-            
+
             resultado.innerHTML = html;
         }
 
@@ -1232,7 +1410,7 @@
 
             // Agregar ciudad
             const agregado = red.agregarCiudad(nombreCiudad);
-            
+
             if (!agregado) {
                 resultado.innerHTML = '<div class="alert error">Error al agregar la ciudad</div>';
                 return;
@@ -1241,7 +1419,7 @@
             // Agregar conexiones
             let conexionesAgregadas = 0;
             let mensajeConexiones = "";
-            
+
             for (let i = 1; i <= contadorConexiones; i++) {
                 const inputConexion = document.getElementById('conectar-con-' + i);
                 if (inputConexion && inputConexion.value.trim()) {
@@ -1282,9 +1460,195 @@
         }
 
         // Inicialización
-        window.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('DOMContentLoaded', function () {
             actualizarDatalist();
         });
     </script>
+    <!-- Botón flotante -->
+    <button id="btn-diagrama" title="Ver diagrama de flujo" onclick="abrirDiagrama()">⬡</button>
+
+    <!-- Modal visor con pan + zoom -->
+    <div id="modal-diagrama">
+        <div id="modal-inner">
+
+            <!-- Barra superior -->
+            <div id="modal-toolbar">
+                <span>📊 Diagrama de Flujo — Sistema de Rutas Avianca</span>
+                <span class="toolbar-hint">🖱 Rueda: zoom &nbsp;|&nbsp; Clic + arrastrar: mover</span>
+                <div class="toolbar-btns">
+                    <button class="tbtn" onclick="zoomDiagram(1.2)">＋ Zoom</button>
+                    <button class="tbtn" onclick="zoomDiagram(0.8)">－ Zoom</button>
+                    <button class="tbtn" onclick="resetDiagram()">⟳ Reset</button>
+                    <button id="btn-cerrar-modal" onclick="cerrarDiagrama()">✕ Cerrar</button>
+                </div>
+            </div>
+
+            <!-- Área navegable -->
+            <div id="diagrama-viewport">
+                <div id="diagrama-canvas">
+                    <div class="mermaid">
+                        flowchart TD
+                        A([Inicio]) --> B[Se carga la pagina web]
+                        B --> C[Se crea el objeto RedRutasAereas]
+                        C --> D[Se cargan ciudades iniciales]
+                        D --> E[Se crea la matriz de conectividad]
+                        E --> F[Se registran las rutas entre ciudades]
+                        F --> G[Se actualiza la lista de ciudades del formulario]
+                        G --> H[Se muestra el menu principal]
+
+                        H --> I{Usuario selecciona una opcion}
+
+                        I -->|1. Analizar ruta| J[Ingresar ciudad origen y destino]
+                        J --> K{Origen y destino completos?}
+                        K -->|No| K1[Mostrar error: faltan datos]
+                        K1 --> H
+                        K -->|Si| L[Analizar ruta]
+                        L --> M[Validar que las ciudades existan]
+                        M --> N{Ciudades validas?}
+                        N -->|No| N1[Mostrar error de ciudad no encontrada]
+                        N1 --> H
+                        N -->|Si| O{Origen igual a destino?}
+                        O -->|Si| O1[Mostrar aviso: misma ciudad]
+                        O1 --> H
+                        O -->|No| P[Verificar vuelo directo]
+                        P --> Q[Buscar ruta minima con BFS]
+                        Q --> R{Existe ruta?}
+                        R -->|No| R1[Mostrar que no hay conexion]
+                        R1 --> H
+                        R -->|Si| S[Mostrar ruta mas corta, escalas y tipo de vuelo]
+                        S --> H
+
+                        I -->|2. Matriz de conectividad| T[Generar tabla visual de matriz]
+                        T --> H
+
+                        I -->|3. Informe completo| U[Calcular total de ciudades, rutas y ciudades mas conectadas]
+                        U --> H
+
+                        I -->|4. Listar ciudades| V[Mostrar ciudades registradas]
+                        V --> H
+
+                        I -->|5. Ejemplos predefinidos| W[Ejecutar analisis con rutas de ejemplo]
+                        W --> H
+
+                        I -->|6. Exportar CSV| X[Generar matriz en formato CSV]
+                        X --> Y[Descargar archivo CSV]
+                        Y --> H
+
+                        I -->|7. Agregar ciudad| Z[Ingresar nueva ciudad y conexiones]
+                        Z --> AA{Nombre valido y no repetido?}
+                        AA -->|No| AA1[Mostrar error]
+                        AA1 --> H
+                        AA -->|Si| AB[Agregar ciudad a la red]
+                        AB --> AC{Tiene conexiones ingresadas?}
+                        AC -->|Si| AD[Registrar rutas con ciudades existentes]
+                        AC -->|No| AE[Conectar automaticamente con Lima]
+                        AD --> AF[Actualizar matriz y datalist]
+                        AE --> AF
+                        AF --> H
+                    </div>
+                </div>
+                <div id="zoom-indicator">100%</div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Mermaid.js CDN alta calidad -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'dark',
+            flowchart: { curve: 'basis', useMaxWidth: false },
+            fontSize: 14
+        });
+
+        // ── Estado pan/zoom ──
+        let scale = 1, panX = 0, panY = 0;
+        let dragging = false, startX = 0, startY = 0;
+        let diagramaInitialized = false;
+
+        const viewport = () => document.getElementById('diagrama-viewport');
+        const canvas = () => document.getElementById('diagrama-canvas');
+        const indicator = () => document.getElementById('zoom-indicator');
+
+        function applyTransform() {
+            canvas().style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+            indicator().textContent = Math.round(scale * 100) + '%';
+        }
+
+        function zoomDiagram(factor, cx, cy) {
+            const vp = viewport();
+            if (cx === undefined) cx = vp.clientWidth / 2;
+            if (cy === undefined) cy = vp.clientHeight / 2;
+            panX = cx - factor * (cx - panX);
+            panY = cy - factor * (cy - panY);
+            scale = Math.min(Math.max(scale * factor, 0.15), 5);
+            applyTransform();
+        }
+
+        function resetDiagram() {
+            scale = 0.72; panX = 20; panY = 10;
+            applyTransform();
+        }
+
+        function abrirDiagrama() {
+            document.getElementById('modal-diagrama').classList.add('open');
+            if (!diagramaInitialized) {
+                mermaid.run({ nodes: document.querySelectorAll('#diagrama-canvas .mermaid') })
+                    .then(() => { diagramaInitialized = true; resetDiagram(); });
+            }
+        }
+
+        function cerrarDiagrama() {
+            document.getElementById('modal-diagrama').classList.remove('open');
+        }
+
+        // ── Zoom con rueda ──
+        document.addEventListener('DOMContentLoaded', () => {
+            const vp = viewport();
+
+            vp.addEventListener('wheel', e => {
+                e.preventDefault();
+                const rect = vp.getBoundingClientRect();
+                const factor = e.deltaY < 0 ? 1.12 : 0.89;
+                zoomDiagram(factor, e.clientX - rect.left, e.clientY - rect.top);
+            }, { passive: false });
+
+            // ── Arrastre con clic izquierdo ──
+            vp.addEventListener('mousedown', e => {
+                if (e.button !== 0) return;
+                dragging = true;
+                startX = e.clientX - panX;
+                startY = e.clientY - panY;
+                vp.classList.add('grabbing');
+            });
+
+            window.addEventListener('mousemove', e => {
+                if (!dragging) return;
+                panX = e.clientX - startX;
+                panY = e.clientY - startY;
+                applyTransform();
+            });
+
+            window.addEventListener('mouseup', () => {
+                dragging = false;
+                viewport().classList.remove('grabbing');
+            });
+
+            // ── Teclado ──
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape') cerrarDiagrama();
+            });
+
+            // ── Clic fuera cierra ──
+            document.getElementById('modal-diagrama').addEventListener('click', function (e) {
+                if (e.target === this) cerrarDiagrama();
+            });
+        });
+    </script>
+
+
 </body>
+
 </html>
